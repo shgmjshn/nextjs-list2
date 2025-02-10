@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import postgres from 'postgres';
+import { signIn } from '@/auth';
+import { AuthError } from 'next-auth';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require'});
 
@@ -52,7 +54,7 @@ export async function createInvoice(prevState: State,formData: FormData) {
     }
 
     // Prepare data for insertion into the databese
-    const { customerId, amount, status} = validatedFields.data;
+    const { customerId, amount, status } = validatedFields.data;
     const amountInCents = amount * 100;
     const date = new Date().toISOString().split('T')[0];
 
@@ -117,4 +119,23 @@ export async function deleteInvoice(id: string) {
     //Unreachable code block
     await sql`DELETE FROM invoices WHERE id = ${id}`;
     revalidatePath('/dashboard/invoices');
+  }
+
+  export async function authenticate(
+    prevState: string | undefined,
+    formData: FormData,
+  ) {
+    try {
+        await signIn('credentials', formData);
+    }catch (error) {
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return 'Invalid credentials';
+                default:
+                    return 'Something went wrong';
+            }
+        }
+        throw error;
+    }
   }
