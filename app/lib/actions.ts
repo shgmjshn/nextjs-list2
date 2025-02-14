@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import postgres from 'postgres';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import bcrypt from 'bcrypt';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require'});
 
@@ -20,6 +21,7 @@ export type SignupState = {
         email?: string[];
         password?: string[];
     }
+    message?: string;
 };
 
 export async function signup(prevState: SignupState, formData: FormData) {
@@ -60,8 +62,8 @@ export async function signup(prevState: SignupState, formData: FormData) {
         `;
 
         return { message: 'User created successfully!' };
-    } catch (error) {
-        console.error('Signup Error:', error);
+    } catch (_error) {
+        console.error('Signup Error:', _error);
         return {
             message: 'Database Error: Failed to create user.',
         };

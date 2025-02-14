@@ -5,16 +5,15 @@ import {
   AtSymbolIcon,
   KeyIcon,
   ExclamationCircleIcon,
-  UserIcon,
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from '@/app/ui/button';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { signup } from '@/app/lib/actions/signup';
+import { signup } from '@/app/lib/actions';
 
 export default function SignUpForm() {
-  const [state, formAction] = useFormState(signup, {
+  const [state, formAction] = useActionState(signup, {
     message: '',
     errors: {}
   });
