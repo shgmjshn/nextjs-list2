@@ -12,12 +12,14 @@ const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require'});
 
 // バリデーションスキーマ
 const SignupSchema = z.object({
+    name: z.string().min(1, { message: 'Name is required' }),
     email: z.string().email({ message: 'Invalid email address'}),
     password: z.string().min(6, { message: 'Password must be at least 6 characters long'})
 });
 
 export type SignupState = {
     errors?: {
+        name?: string[];
         email?: string[];
         password?: string[];
     }
@@ -27,6 +29,7 @@ export type SignupState = {
 export async function signup(prevState: SignupState, formData: FormData) {
     // バリデーション
     const validatedFields = SignupSchema.safeParse({
+        name: formData.get('name'),
         email: formData.get('email'),
         password: formData.get('password'),
     });
@@ -38,15 +41,26 @@ export async function signup(prevState: SignupState, formData: FormData) {
         }
     }
 
-    const { email, password } = validatedFields.data;
+    const { name, email, password } = validatedFields.data;
 
     try {
+        // ユーザー名の重複チェック
+        const existingUsername = await sql`
+            SELECT name FROM users WHERE name=${name}
+        `;
+
+        if (existingUsername.length > 0) {
+            return {
+                message: 'User already exists with this name.',
+            };
+        }
+
         // メールアドレスの重複チェック
-        const existingUser = await sql`
+        const existingEmail = await sql`
            SELECT email FROM users WHERE email=${email}
         `;
 
-        if (existingUser.length > 0) {
+        if (existingEmail.length > 0) {
             return {
                 message: 'User already exists with this email.',
             };
@@ -57,11 +71,11 @@ export async function signup(prevState: SignupState, formData: FormData) {
 
         // ユーザーの保存
         await sql`
-          INSERT INTO users (email, password)
-          VALUES (${email}, ${hashedPassword})
+          INSERT INTO users (name, email, password)
+          VALUES (${name}, ${email}, ${hashedPassword})
         `;
 
-        return { message: 'User created successfully!' };
+        redirect('/login');
     } catch (_error) {
         console.error('Signup Error:', _error);
         return {

@@ -27,6 +27,22 @@ export default function LoginForm() {
         </h1>
         <div className="w-full">
           <div>
+            {/* Name */}
+            <label
+              className="mb-3 mt-5 block text-xs font-medium text-gray-900"
+              htmlFor="name"
+            >
+              Name
+            </label>
+            <div className="relative">
+              <input
+                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
+                id="name"
+                type="text"
+                name="name"
+                placeholder="Enter your name"
+              />
+            </div>
             <label
               className="mb-3 mt-5 block text-xs font-medium text-gray-900"
               htmlFor="email"
